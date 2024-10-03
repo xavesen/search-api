@@ -6,21 +6,24 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/xavesen/search-api/internal/queue"
+	"github.com/xavesen/search-api/internal/storage"
 )
 
 type Server struct {
 	listenAddr string
-	router     *mux.Router
-	queue      queue.Queue
+	router     	*mux.Router
+	queue      	queue.Queue
+	docStorage	storage.DocumentStorage
 }
 
-func NewServer(listenAddr string, kafkaQueue *queue.KafkaQueue) *Server {
+func NewServer(listenAddr string, queue queue.Queue, documentStorage storage.DocumentStorage) *Server {
 	log.Debug("Initializing server")
 
 	server := Server{
 		listenAddr: listenAddr,
 		router:     mux.NewRouter(),
-		queue:      kafkaQueue,
+		queue:      queue,
+		docStorage: documentStorage,
 	}
 
 	server.initialiseRoutes()
@@ -32,6 +35,7 @@ func (s *Server) initialiseRoutes() {
 
 	s.router.HandleFunc("/ping", s.Ping).Methods("GET")
 	s.router.HandleFunc("/indexDocuments", s.indexDocuments).Methods("POST")
+	s.router.HandleFunc("/searchDocuments", s.searchDocuments).Methods("POST")
 }
 
 func (s *Server) Start() error {

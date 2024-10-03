@@ -10,3 +10,9 @@ type DocumentsForIndexing struct {
 	UserId		string		`json:"user_id,omitempty"`
 	Documents 	[]Document	`json:"documents"`
 }
+
+type DocumentSearchRequest struct {
+	Index 		string	`json:"index_name"`
+	Title		string	`json:"title,omitempty"`
+	Text		string	`json:"text,omitempty"`
+}

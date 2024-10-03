@@ -38,3 +38,15 @@ func (s *Server) indexDocuments(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, r, http.StatusOK, true, "Successfully sent documents for indexing", nil)
 }
+
+func (s *Server) searchDocuments(w http.ResponseWriter, r *http.Request) {
+	var searchRequest *models.DocumentSearchRequest
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&searchRequest); err != nil {
+		utils.WriteJSON(w, r, http.StatusBadRequest, false, "Invalid request payload", nil)
+		return
+	}
+
+	
+}
