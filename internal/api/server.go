@@ -4,23 +4,23 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
+	"github.com/xavesen/search-api/internal/queue"
 )
 
 type Server struct {
 	listenAddr string
 	router     *mux.Router
-	kafkaConn  *kafka.Conn
+	queue      queue.Queue
 }
 
-func NewServer(listenAddr string, kafkaConn *kafka.Conn) *Server {
+func NewServer(listenAddr string, kafkaQueue *queue.KafkaQueue) *Server {
 	log.Debug("Initializing server")
 
 	server := Server{
 		listenAddr: listenAddr,
 		router:     mux.NewRouter(),
-		kafkaConn:  kafkaConn,
+		queue:      kafkaQueue,
 	}
 
 	server.initialiseRoutes()

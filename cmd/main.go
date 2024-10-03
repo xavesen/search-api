@@ -2,19 +2,20 @@ package main
 
 import (
 	"context"
+	"os"
 
-	"github.com/xavesen/search-api/internal/api"
 	log "github.com/sirupsen/logrus"
-	"github.com/segmentio/kafka-go"
+	"github.com/xavesen/search-api/internal/api"
+	"github.com/xavesen/search-api/internal/queue"
 )
 
 func main() {
-	kafkaConn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", "test", 0)
+	kafkaQueue, err := queue.NewKafkaQueue(context.TODO(), []string{"localhost:9092"}, "test")
 	if err != nil {
-		log.Fatal("failed to dial leader:", err)
+		os.Exit(1)
 	}
 
-	server := api.NewServer("127.0.0.1:8897", kafkaConn)
+	server := api.NewServer("127.0.0.1:8897", kafkaQueue)
 
 	log.Fatal(server.Start())
 }

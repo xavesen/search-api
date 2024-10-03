@@ -1,10 +1,10 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
-	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/xavesen/search-api/internal/models"
 	"github.com/xavesen/search-api/internal/utils"
@@ -26,16 +26,13 @@ func (s *Server) indexDocuments(w http.ResponseWriter, r *http.Request) {
 	jsonIndexRequest, err := json.Marshal(documentsIndexingRequest)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
-		log.Fatal("Error marshalling documents for index request to json after adding adding user_id to original struct from user") // TODO: structured logging with more info
+		log.Error("Error marshalling documents for index request to json after adding adding user_id to original struct from user") // TODO: structured logging with more info
 		return
 	}
 
-	_, err = s.kafkaConn.WriteMessages(
-		kafka.Message{Value: []byte(jsonIndexRequest)},
-	)
+	err = s.queue.WriteMessage(context.TODO(), jsonIndexRequest)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
-		log.Fatalf("Error marshalling documents for index request to json after adding adding user_id to original struct from user") // TODO: handling errors without aborting the app
 		return
 	}
 
