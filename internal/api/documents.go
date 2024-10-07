@@ -18,8 +18,18 @@ func (s *Server) indexDocuments(w http.ResponseWriter, r *http.Request) {
 		utils.WriteJSON(w, r, http.StatusBadRequest, false, "Invalid request payload", nil)
 		return
 	}
+	// TODO: add payload validation
 
-	// TODO: check if index exists and user can write to it
+	indexExists, err := s.docStorage.IndexExists(context.TODO(), documentsIndexingRequest.Index)
+	if err != nil {
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
+
+	if !indexExists { // TODO: add user rights check
+		utils.WriteJSON(w, r, http.StatusForbidden, false, "Index doesn't exist or you don't have access to it", nil)
+		return
+	}
 
 	documentsIndexingRequest.UserId = "1" // TODO: hardcoded, change to real userId retrieved from token
 
@@ -49,7 +59,17 @@ func (s *Server) searchDocuments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: validate payload
-	// TODO: check if index exists and user can search it
+	
+	indexExists, err := s.docStorage.IndexExists(context.TODO(), searchRequest.Index)
+	if err != nil {
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
+
+	if !indexExists { // TODO: add user rights check
+		utils.WriteJSON(w, r, http.StatusForbidden, false, "Index doesn't exist or you don't have access to it", nil)
+		return
+	}
 
 	documents, err := s.docStorage.SearchQuery(context.TODO(), searchRequest)
 	if err != nil {

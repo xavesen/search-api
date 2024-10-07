@@ -68,3 +68,12 @@ func (es *ElasticSearchClient) SearchQuery(ctx context.Context, searchRequest *m
 
 	return documents, nil
 }
+
+func (es *ElasticSearchClient) IndexExists(ctx context.Context, indexName string) (bool, error) {
+	exists, err := es.Client.Indices.Exists(indexName).Do(ctx)
+	if err != nil {
+		log.Errorf("Error performing index exists check in ES with index name %s: %s", indexName, err)
+		return false, err
+	}
+	return exists, nil
+}

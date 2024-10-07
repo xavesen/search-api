@@ -7,4 +7,5 @@ import (
 
 type DocumentStorage interface {
 	SearchQuery(ctx context.Context, searchRequest *models.DocumentSearchRequest) ([]models.Document, error)
+	IndexExists(ctx context.Context, indexName string) (bool, error)
 }
