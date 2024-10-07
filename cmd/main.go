@@ -16,7 +16,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	esClient, err := storage.NewElasticSearchClient([]string{"http://localhost:920/"}, "***") // TODO: put back api key and store all sensitive data in env file
+	esClient, err := storage.NewElasticSearchClient([]string{"http://localhost:9200/"}, "Y0tTa1VwSUJMUkE0b3JsSDRNMWQ6aEFWVU04c0lRTXV6ZlNhWE1IbVJiUQ==") // TODO: put back api key and store all sensitive data in env file
 	if err != nil {
 		os.Exit(1)
 	}

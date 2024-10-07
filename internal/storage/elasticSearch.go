@@ -2,13 +2,14 @@ package storage
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/xavesen/search-api/internal/models"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 )
 
 type ElasticSearchClient struct {
@@ -36,18 +37,34 @@ func NewElasticSearchClient(addr []string, apiKey string) (*ElasticSearchClient,
 	return &ElasticSearchClient{Client: es}, nil
 }
 
-func (es *ElasticSearchClient) SearchQuery(ctx context.Context, searchRequest *models.DocumentSearchRequest) {
-	es.Client.Search().
+func (es *ElasticSearchClient) SearchQuery(ctx context.Context, searchRequest *models.DocumentSearchRequest) ([]models.Document, error) {
+	documents := []models.Document{}
+
+	searchResult, err := es.Client.Search().
 	Index(searchRequest.Index).
 	Request(
 		&search.Request{
 			Query: &types.Query{
-				Match: map[string]types.MatchQuery{
-					"title": {Query: searchRequest.Title},
-					"text": {Query: searchRequest.Text},
+				QueryString: &types.QueryStringQuery{
+					Query: searchRequest.Query,
 				},
 			},
 		},
 	).Do(ctx)
-	
+	if err != nil {
+		log.Errorf("Error performing search request with query %s in index %s: %s", searchRequest.Query, searchRequest.Index, err)
+		return []models.Document{}, err
+	}
+
+	for _, hit := range searchResult.Hits.Hits {
+		var document models.Document
+		err = json.Unmarshal(hit.Source_, &document)
+		if err != nil {
+			log.Errorf("Error unmarshalling hit from ES to document struct: %s", err)
+			continue
+		}
+		documents = append(documents, document)
+	}
+
+	return documents, nil
 }

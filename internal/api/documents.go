@@ -36,7 +36,7 @@ func (s *Server) indexDocuments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, r, http.StatusOK, true, "Successfully sent documents for indexing", nil)
+	utils.WriteJSON(w, r, http.StatusOK, true, "", nil)
 }
 
 func (s *Server) searchDocuments(w http.ResponseWriter, r *http.Request) {
@@ -48,5 +48,14 @@ func (s *Server) searchDocuments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
+	// TODO: validate payload
+	// TODO: check if index exists and user can search it
+
+	documents, err := s.docStorage.SearchQuery(context.TODO(), searchRequest)
+	if err != nil {
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
+
+	utils.WriteJSON(w, r, http.StatusOK, true, "", documents)
 }
