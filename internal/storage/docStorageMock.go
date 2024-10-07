@@ -7,22 +7,23 @@ import (
 )
 
 type DocStorageMock struct {
-	Error 			error
+	IndexError 		error
+	SearchError		error
 	Documents 		[]models.Document
 	EsIndexExists 	bool
 }
 
 func (ds *DocStorageMock) SearchQuery(ctx context.Context, searchRequest *models.DocumentSearchRequest) ([]models.Document, error) {
-	if ds.Error != nil {
-		return []models.Document{}, ds.Error
+	if ds.SearchError != nil {
+		return []models.Document{}, ds.SearchError
 	}
 
 	return ds.Documents, nil
 }
 
 func (ds *DocStorageMock) IndexExists(ctx context.Context, indexName string) (bool, error) {
-	if ds.Error != nil {
-		return false, ds.Error
+	if ds.IndexError != nil {
+		return false, ds.IndexError
 	}
 
 	return ds.EsIndexExists, nil
