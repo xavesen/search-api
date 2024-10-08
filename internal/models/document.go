@@ -15,3 +15,7 @@ type DocumentSearchRequest struct {
 	Index 		string	`json:"index_name"`
 	Query		string	`json:"query"`
 }
+
+type CreateIndexRequest struct {
+	Index 		string	`json:"index_name"`
+}

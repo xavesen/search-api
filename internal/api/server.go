@@ -36,6 +36,7 @@ func (s *Server) initialiseRoutes() {
 	s.router.HandleFunc("/ping", s.Ping).Methods("GET")
 	s.router.HandleFunc("/indexDocuments", s.indexDocuments).Methods("POST")
 	s.router.HandleFunc("/searchDocuments", s.searchDocuments).Methods("POST")
+	s.router.HandleFunc("/createIndex", s.createIndex).Methods("POST")
 }
 
 func (s *Server) Start() error {

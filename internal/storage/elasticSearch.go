@@ -12,6 +12,10 @@ import (
 	"github.com/xavesen/search-api/internal/models"
 )
 
+const (
+	ErrResourceAlreadyExists = "resource_already_exists_exception"
+)
+
 type ElasticSearchClient struct {
 	Client 	*elasticsearch.TypedClient
 }
@@ -76,4 +80,13 @@ func (es *ElasticSearchClient) IndexExists(ctx context.Context, indexName string
 		return false, err
 	}
 	return exists, nil
+}
+
+func (es *ElasticSearchClient) NewIndex(ctx context.Context, indexName string) error {
+	_, err := es.Client.Indices.Create(indexName).Do(ctx)
+	if err != nil {
+		log.Errorf("Error creating index '%s' in ES: %s", indexName, err)
+		return err
+	}
+	return nil
 }

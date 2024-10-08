@@ -28,3 +28,7 @@ func (ds *DocStorageMock) IndexExists(ctx context.Context, indexName string) (bo
 
 	return ds.EsIndexExists, nil
 }
+
+func (ds *DocStorageMock) NewIndex(ctx context.Context, indexName string) error {
+	return nil
+}
