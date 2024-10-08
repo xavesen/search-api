@@ -9,6 +9,7 @@ import (
 type DocStorageMock struct {
 	IndexError 		error
 	SearchError		error
+	CreateError		error
 	Documents 		[]models.Document
 	EsIndexExists 	bool
 }
@@ -30,5 +31,5 @@ func (ds *DocStorageMock) IndexExists(ctx context.Context, indexName string) (bo
 }
 
 func (ds *DocStorageMock) NewIndex(ctx context.Context, indexName string) error {
-	return nil
+	return ds.CreateError
 }
