@@ -8,20 +8,26 @@ import (
 	"github.com/xavesen/search-api/internal/api"
 	"github.com/xavesen/search-api/internal/queue"
 	"github.com/xavesen/search-api/internal/storage"
+	"github.com/xavesen/search-api/internal/config"
 )
 
 func main() {
-	kafkaQueue, err := queue.NewKafkaQueue(context.TODO(), []string{"localhost:9092"}, "test")
+	config, err := config.LoadConfig()
 	if err != nil {
 		os.Exit(1)
 	}
 
-	esClient, err := storage.NewElasticSearchClient([]string{"http://localhost:9200/"}, "Y0tTa1VwSUJMUkE0b3JsSDRNMWQ6aEFWVU04c0lRTXV6ZlNhWE1IbVJiUQ==") // TODO: put back api key and store all sensitive data in env file
+	kafkaQueue, err := queue.NewKafkaQueue(context.TODO(), config.KafkaAddrs, config.KafkaTopic)
 	if err != nil {
 		os.Exit(1)
 	}
 
-	server := api.NewServer("127.0.0.1:8897", kafkaQueue, esClient)
+	esClient, err := storage.NewElasticSearchClient(config.ElasticSearchURLs, config.ElasticSearchKey)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	server := api.NewServer(config.ListenAddr, kafkaQueue, esClient)
 
 	log.Fatal(server.Start())
 }
