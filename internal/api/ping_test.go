@@ -12,7 +12,7 @@ import (
 )
 
 func TestPingHandler(t *testing.T) {
-	server := NewServer("", nil, nil)
+	server := NewServer("", nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, "/ping", nil)
 	if err != nil {

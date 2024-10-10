@@ -17,6 +17,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.TODO()
+	mongoStorage, err := storage.NewMongoStorage(ctx, config.DbAddr, config.Db, config.DbUser, config.DbPass)
+	if err != nil {
+		os.Exit(1)
+	}
+
 	kafkaQueue, err := queue.NewKafkaQueue(context.TODO(), config.KafkaAddrs, config.KafkaTopic)
 	if err != nil {
 		os.Exit(1)
@@ -27,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	server := api.NewServer(config.ListenAddr, kafkaQueue, esClient)
+	server := api.NewServer(config.ListenAddr, kafkaQueue, esClient, mongoStorage)
 
 	log.Fatal(server.Start())
 }

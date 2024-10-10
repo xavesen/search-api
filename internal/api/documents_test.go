@@ -22,6 +22,7 @@ var indexDocumentsTests = []struct {
 	testName 			string
 	docStorage 			*storage.DocStorageMock
 	queue				*queue.QueueMock
+	userStorage 		*storage.UserStorageMock
 	payload				*models.DocumentsForIndexing
 	expectedCode		int
 	expectedResponse 	utils.Response
@@ -33,6 +34,9 @@ var indexDocumentsTests = []struct {
 		},
 		queue: &queue.QueueMock{
 			Error: nil,
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
 		},
 		payload: &models.DocumentsForIndexing{
 			Index: "test",
@@ -64,6 +68,9 @@ var indexDocumentsTests = []struct {
 		queue: &queue.QueueMock{
 			Error: nil,
 		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
+		},
 		payload: &models.DocumentsForIndexing{
 			Index: "test",
 			UserId: "1",
@@ -92,6 +99,9 @@ var indexDocumentsTests = []struct {
 		},
 		queue: &queue.QueueMock{
 			Error: nil,
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
 		},
 		payload: &models.DocumentsForIndexing{
 			Index: "test",
@@ -122,6 +132,74 @@ var indexDocumentsTests = []struct {
 		queue: &queue.QueueMock{
 			Error: errors.New("random error"),
 		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
+		},
+		payload: &models.DocumentsForIndexing{
+			Index: "test",
+			UserId: "1",
+			Documents: []models.Document{
+				{
+					Title: "test",
+					Text: "test test test",
+				},
+				{
+					Title: "test1",
+					Text: "test1 test1 test1",
+				},
+			},
+		},
+		expectedCode: 500,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Internal server error",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 403 when user doesn't have access to index",
+		docStorage: &storage.DocStorageMock{
+			EsIndexExists: true,
+		},
+		queue: &queue.QueueMock{
+			Error: nil,
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: false,
+		},
+		payload: &models.DocumentsForIndexing{
+			Index: "test",
+			UserId: "1",
+			Documents: []models.Document{
+				{
+					Title: "test",
+					Text: "test test test",
+				},
+				{
+					Title: "test1",
+					Text: "test1 test1 test1",
+				},
+			},
+		},
+		expectedCode: 403,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Index doesn't exist or you don't have access to it",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 500 on error while checking if user has access to index",
+		docStorage: &storage.DocStorageMock{
+			EsIndexExists: true,
+		},
+		queue: &queue.QueueMock{
+			Error: nil,
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: false,
+			IndexRightsError: errors.New("random error"),
+		},
 		payload: &models.DocumentsForIndexing{
 			Index: "test",
 			UserId: "1",
@@ -149,7 +227,7 @@ func TestIndexDocumentsHandler(t *testing.T) {
 	for i, test := range indexDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", test.queue, test.docStorage)
+		server := NewServer("", test.queue, test.docStorage, test.userStorage)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -177,6 +255,7 @@ func TestIndexDocumentsHandler(t *testing.T) {
 var searchDocumentsTests = []struct {
 	testName 			string
 	docStorage 			*storage.DocStorageMock
+	userStorage 		*storage.UserStorageMock
 	payload				*models.DocumentSearchRequest
 	expectedCode		int
 	expectedResponse 	utils.Response
@@ -195,6 +274,9 @@ var searchDocumentsTests = []struct {
 					Text: "test1 test1 test1",
 				},
 			},
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
 		},
 		payload: &models.DocumentSearchRequest{
 			Index: "test",
@@ -222,6 +304,9 @@ var searchDocumentsTests = []struct {
 			IndexError: errors.New("random error"),
 			EsIndexExists: true,
 		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
+		},
 		payload: &models.DocumentSearchRequest{
 			Index: "test",
 			Query: "search",
@@ -237,6 +322,9 @@ var searchDocumentsTests = []struct {
 		testName: "Return 403 when index doesn't exist",
 		docStorage: &storage.DocStorageMock{
 			EsIndexExists: false,
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
 		},
 		payload: &models.DocumentSearchRequest{
 			Index: "test",
@@ -255,6 +343,68 @@ var searchDocumentsTests = []struct {
 			SearchError: errors.New("random error"),
 			EsIndexExists: true,
 		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
+		},
+		payload: &models.DocumentSearchRequest{
+			Index: "test",
+			Query: "search",
+		},
+		expectedCode: 500,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Internal server error",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 403 if user doesn't have access to index",
+		docStorage: &storage.DocStorageMock{
+			EsIndexExists: true,
+			Documents: []models.Document{
+				{
+					Title: "test",
+					Text: "test test test",
+				},
+				{
+					Title: "test1",
+					Text: "test1 test1 test1",
+				},
+			},
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: false,
+		},
+		payload: &models.DocumentSearchRequest{
+			Index: "test",
+			Query: "search",
+		},
+		expectedCode: 403,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Index doesn't exist or you don't have access to it",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 500 on error while checking if user has access to index",
+		docStorage: &storage.DocStorageMock{
+			EsIndexExists: true,
+			Documents: []models.Document{
+				{
+					Title: "test",
+					Text: "test test test",
+				},
+				{
+					Title: "test1",
+					Text: "test1 test1 test1",
+				},
+			},
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: false,
+			IndexRightsError: errors.New("random error"),
+		},
 		payload: &models.DocumentSearchRequest{
 			Index: "test",
 			Query: "search",
@@ -272,7 +422,7 @@ func TestSearchDocumentsHandler(t *testing.T) {
 	for i, test := range searchDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage)
+		server := NewServer("", nil, test.docStorage, test.userStorage)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -368,7 +518,7 @@ func TestCreateIndexHandler(t *testing.T) {
 	for i, test := range createIndexHandlerTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage)
+		server := NewServer("", nil, test.docStorage, nil)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {

@@ -10,3 +10,7 @@ type DocumentStorage interface {
 	IndexExists(ctx context.Context, indexName string) (bool, error)
 	NewIndex(ctx context.Context, indexName string) error
 }
+
+type UserStorage interface {
+	CheckUserIndexRights(ctx context.Context, userId string, indexId string) (bool, error)
+}

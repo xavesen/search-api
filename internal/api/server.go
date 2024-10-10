@@ -14,9 +14,10 @@ type Server struct {
 	router     	*mux.Router
 	queue      	queue.Queue
 	docStorage	storage.DocumentStorage
+	userStorage storage.UserStorage
 }
 
-func NewServer(listenAddr string, queue queue.Queue, documentStorage storage.DocumentStorage) *Server {
+func NewServer(listenAddr string, queue queue.Queue, documentStorage storage.DocumentStorage, userStorage storage.UserStorage) *Server {
 	log.Debug("Initializing server")
 
 	server := Server{
@@ -24,6 +25,7 @@ func NewServer(listenAddr string, queue queue.Queue, documentStorage storage.Doc
 		router:     mux.NewRouter(),
 		queue:      queue,
 		docStorage: documentStorage,
+		userStorage: userStorage,
 	}
 
 	server.initialiseRoutes()

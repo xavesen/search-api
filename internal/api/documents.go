@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-
-	//"errors"
 	"net/http"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -25,18 +23,23 @@ func (s *Server) indexDocuments(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: add payload validation
 
+	documentsIndexingRequest.UserId = "66d8420df6e5311a791e0a08" // TODO: hardcoded, change to real userId retrieved from token
+	userHasAccess, err := s.userStorage.CheckUserIndexRights(context.TODO(), documentsIndexingRequest.UserId, documentsIndexingRequest.Index)
+	if err != nil {
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
+
 	indexExists, err := s.docStorage.IndexExists(context.TODO(), documentsIndexingRequest.Index)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
 		return
 	}
 
-	if !indexExists { // TODO: add user rights check
+	if !indexExists || !userHasAccess {
 		utils.WriteJSON(w, r, http.StatusForbidden, false, "Index doesn't exist or you don't have access to it", nil)
 		return
 	}
-
-	documentsIndexingRequest.UserId = "1" // TODO: hardcoded, change to real userId retrieved from token
 
 	jsonIndexRequest, err := json.Marshal(documentsIndexingRequest)
 	if err != nil {
@@ -64,14 +67,21 @@ func (s *Server) searchDocuments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: validate payload
-	
+
+	userId := "66d8420df6e5311a791e0a08" // TODO: hardcoded, change to real userId retrieved from token
+	userHasAccess, err := s.userStorage.CheckUserIndexRights(context.TODO(), userId, searchRequest.Index)
+	if err != nil {
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
+
 	indexExists, err := s.docStorage.IndexExists(context.TODO(), searchRequest.Index)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
 		return
 	}
 
-	if !indexExists { // TODO: add user rights check
+	if !indexExists || !userHasAccess {
 		utils.WriteJSON(w, r, http.StatusForbidden, false, "Index doesn't exist or you don't have access to it", nil)
 		return
 	}
