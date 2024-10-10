@@ -15,7 +15,6 @@ func NewKafkaQueue(ctx context.Context, addr []string, topic string) (*KafkaQueu
 	writer := &kafka.Writer{
 		Addr: kafka.TCP(addr...),
 		Topic: topic,
-		AllowAutoTopicCreation: true,
 	}
 
 	return &KafkaQueue{Writer: writer}, nil
