@@ -104,6 +104,8 @@ func (s *Server) createIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userId := "6707e924ce91f1780b739e8c" // TODO: hardcoded, change to real userId retrieved from token
+
 	// TODO: validate payload
 
 	err := s.docStorage.NewIndex(context.TODO(), createIndexRequest.Index)
@@ -117,7 +119,12 @@ func (s *Server) createIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: save index info in db
+	err = s.userStorage.AddIndexToUser(context.TODO(), userId, createIndexRequest.Index)
+	if err != nil {
+		// TODO: delete existing index on error here
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
 
 	utils.WriteJSON(w, r, http.StatusOK, true, "", nil)
 }

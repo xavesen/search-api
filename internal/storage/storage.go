@@ -13,4 +13,5 @@ type DocumentStorage interface {
 
 type UserStorage interface {
 	CheckUserIndexRights(ctx context.Context, userId string, indexId string) (bool, error)
+	AddIndexToUser(ctx context.Context, userId string, indexName string) error
 }

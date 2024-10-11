@@ -450,6 +450,7 @@ func TestSearchDocumentsHandler(t *testing.T) {
 var createIndexHandlerTests = []struct {
 	testName 			string
 	docStorage 			*storage.DocStorageMock
+	userStorage 		*storage.UserStorageMock
 	payload				*models.CreateIndexRequest
 	expectedCode		int
 	expectedResponse 	utils.Response
@@ -457,6 +458,7 @@ var createIndexHandlerTests = []struct {
 	{
 		testName: "Return 200",
 		docStorage: &storage.DocStorageMock{},
+		userStorage: &storage.UserStorageMock{},
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
@@ -472,6 +474,7 @@ var createIndexHandlerTests = []struct {
 		docStorage: &storage.DocStorageMock{
 			CreateError: errors.New("random error"),
 		},
+		userStorage: &storage.UserStorageMock{},
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
@@ -487,6 +490,7 @@ var createIndexHandlerTests = []struct {
 		docStorage: &storage.DocStorageMock{
 			CreateError: types.NewElasticsearchError(),
 		},
+		userStorage: &storage.UserStorageMock{},
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
@@ -502,6 +506,7 @@ var createIndexHandlerTests = []struct {
 		docStorage: &storage.DocStorageMock{
 			CreateError: &types.ElasticsearchError{Status: 400, ErrorCause: types.ErrorCause{Type: storage.ErrResourceAlreadyExists}},
 		},
+		userStorage: &storage.UserStorageMock{},
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
@@ -512,13 +517,29 @@ var createIndexHandlerTests = []struct {
 			Data: nil,
 		},
 	},
+	{
+		testName: "Return 500 when user storage returns an error",
+		docStorage: &storage.DocStorageMock{},
+		userStorage: &storage.UserStorageMock{
+			AddIndexError: errors.New("random error"),
+		},
+		payload: &models.CreateIndexRequest{
+			Index: "test",
+		},
+		expectedCode: 500,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Internal server error",
+			Data: nil,
+		},
+	},
 }
 
 func TestCreateIndexHandler(t *testing.T) {
 	for i, test := range createIndexHandlerTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, nil)
+		server := NewServer("", nil, test.docStorage, test.userStorage)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {

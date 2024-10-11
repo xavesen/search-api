@@ -59,7 +59,7 @@ func NewMongoStorage(ctx context.Context, addr string, db string, user string, p
 func (s *MongoStorage) CheckUserIndexRights(ctx context.Context, userId string, indexName string) (bool, error) {
 	oid, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
-		log.Warningf("Error converting userId string %s to object id while checking user rights for index with name %s: %s", userId, indexName, err.Error())
+		log.Errorf("Error converting userId string %s to object id while checking user rights for index with name %s: %s", userId, indexName, err.Error())
 		return false, err
 	}
 
@@ -82,4 +82,29 @@ func (s *MongoStorage) CheckUserIndexRights(ctx context.Context, userId string, 
 	}
 
 	return false, nil
+}
+
+func (s *MongoStorage) AddIndexToUser(ctx context.Context, userId string, indexName string) error {
+	oid, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		log.Errorf("Error converting userId string %s to object id while adding index with name %s to user: %s", userId, indexName, err.Error())
+		return err
+	}
+
+	update := bson.D{
+		{Key: "$push", Value: bson.D{
+			{Key: "indexes", Value: indexName},
+		}},
+	}
+
+	result, err := s.usersCollection.UpdateByID(ctx, oid, update)
+	if err != nil {
+		log.Errorf("Error pushing index with name %s to indexes array in users document with id %s: %s", indexName, userId, err)
+		return err
+	} else if result.MatchedCount == 0 {
+		log.Errorf("Error pushing index with name %s to indexes array in users document with id %s: user doesn't exist", indexName, userId)
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
 }
