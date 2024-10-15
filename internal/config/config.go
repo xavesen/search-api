@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/base64"
+	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -24,6 +26,13 @@ type Config struct {
 	DbPass					string		`mapstructure:"DB_PASSWORD"`
 
 	LogLevel 				log.Level	`mapstructure:"LOG_LEVEL"`
+
+	JwtAccessTTL			int			`mapstructure:"JWT_ACCESS_TOKEN_TTL"`
+	JwtRefreshTTL			int			`mapstructure:"JWT_REFRESH_TOKEN_TTL"`
+	JwtRefreshSalt			string		`mapstructure:"JWT_REFRESH_TOKEN_SALT"`
+	JwtKeyStr				string		`mapstructure:"JWT_KEY"`
+	JwtKey					[]byte
+	TokenHeaderName			string		`mapstructure:"TOKEN_HEADER_NAME"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -40,6 +49,12 @@ func LoadConfig() (*Config, error) {
 
 	config.KafkaAddrs = strings.Split(config.KafkaAddrsStr, ";")
 	config.ElasticSearchURLs = strings.Split(config.ElasticSearchURLsStr, ";")
+	jwtKey, err := base64.StdEncoding.DecodeString(config.JwtKeyStr)
+	if err != nil {
+		log.Errorf("Error decoding JWT_KEY from base64: %s", err)
+		os.Exit(1)
+	}
+	config.JwtKey = jwtKey
 
 	log.Infof("Setting log level to %s", config.LogLevel.String())
 	log.SetLevel(config.LogLevel)

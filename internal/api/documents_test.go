@@ -10,12 +10,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/magiconair/properties/assert"
+	"github.com/xavesen/search-api/internal/config"
 	"github.com/xavesen/search-api/internal/models"
 	"github.com/xavesen/search-api/internal/queue"
 	"github.com/xavesen/search-api/internal/storage"
 	"github.com/xavesen/search-api/internal/utils"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 var indexDocumentsTests = []struct {
@@ -224,10 +225,14 @@ var indexDocumentsTests = []struct {
 }
 
 func TestIndexDocumentsHandler(t *testing.T) {
+	config := &config.Config{
+		JwtKey: []byte("aaa"),
+		TokenHeaderName: "aaa",
+	}
 	for i, test := range indexDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", test.queue, test.docStorage, test.userStorage)
+		server := NewServer("", test.queue, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{})
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -238,6 +243,7 @@ func TestIndexDocumentsHandler(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unable to create request, error: %s\n", err)
 		}
+		req.Header.Add(config.TokenHeaderName, "aaa")
 
 		rr := httptest.NewRecorder()
 		server.router.ServeHTTP(rr, req)
@@ -419,10 +425,14 @@ var searchDocumentsTests = []struct {
 }
 
 func TestSearchDocumentsHandler(t *testing.T) {
+	config := &config.Config{
+		JwtKey: []byte("aaa"),
+		TokenHeaderName: "aaa",
+	}
 	for i, test := range searchDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, test.userStorage)
+		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{})
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -433,6 +443,8 @@ func TestSearchDocumentsHandler(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unable to create request, error: %s\n", err)
 		}
+
+		req.Header.Add(config.TokenHeaderName, "aaa")
 
 		rr := httptest.NewRecorder()
 		server.router.ServeHTTP(rr, req)
@@ -536,10 +548,14 @@ var createIndexHandlerTests = []struct {
 }
 
 func TestCreateIndexHandler(t *testing.T) {
+	config := &config.Config{
+		JwtKey: []byte("aaa"),
+		TokenHeaderName: "aaa",
+	}
 	for i, test := range createIndexHandlerTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, test.userStorage)
+		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{})
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -550,6 +566,8 @@ func TestCreateIndexHandler(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unable to create request, error: %s\n", err)
 		}
+
+		req.Header.Add(config.TokenHeaderName, "aaa")
 
 		rr := httptest.NewRecorder()
 		server.router.ServeHTTP(rr, req)

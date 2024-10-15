@@ -8,11 +8,17 @@ import (
 	"testing"
 
 	"github.com/magiconair/properties/assert"
+	"github.com/xavesen/search-api/internal/config"
 	"github.com/xavesen/search-api/internal/utils"
 )
 
 func TestPingHandler(t *testing.T) {
-	server := NewServer("", nil, nil, nil)
+	config := &config.Config{
+		JwtKey: []byte("aaa"),
+		TokenHeaderName: "aaa",
+	}
+
+	server := NewServer("", nil, nil, nil, config, nil)
 
 	req, err := http.NewRequest(http.MethodGet, "/ping", nil)
 	if err != nil {

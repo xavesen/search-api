@@ -4,11 +4,11 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/xavesen/search-api/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoStorage struct {
@@ -103,6 +103,49 @@ func (s *MongoStorage) AddIndexToUser(ctx context.Context, userId string, indexN
 		return err
 	} else if result.MatchedCount == 0 {
 		log.Errorf("Error pushing index with name %s to indexes array in users document with id %s: user doesn't exist", indexName, userId)
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}
+
+func (s *MongoStorage) GetUserInfo(ctx context.Context, login string) (*models.User, error) {
+	var user *models.User
+	filter := bson.D{
+		{Key: "login", Value: login},
+	}
+
+	if err := s.usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Warningf("Tried to find in db non-existent user with login %s ", login)
+		} else {
+			log.Errorf("Error searching for user with login %s in db: %s", login, err.Error())
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *MongoStorage) SetRefreshToken(ctx context.Context, userId string, refreshToken string) error {
+	oid, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		log.Errorf("Error converting userId string %s to object id while adding refresh token %s to user: %s", userId, refreshToken, err.Error())
+		return err
+	}
+
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "refreshToken", Value: refreshToken},
+		}},
+	}
+
+	result, err := s.usersCollection.UpdateByID(ctx, oid, update)
+	if err != nil {
+		log.Errorf("Error setting refresh token %s for user %s: %s", refreshToken, userId, err)
+		return err
+	} else if result.MatchedCount < 1 {
+		log.Errorf("Error setting refresh token %s for user %s: No user with such id", refreshToken, userId)
 		return mongo.ErrNoDocuments
 	}
 

@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.15.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/mux v1.8.1
 	github.com/magiconair/properties v1.8.7
 	github.com/segmentio/kafka-go v0.4.47

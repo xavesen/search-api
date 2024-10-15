@@ -6,9 +6,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xavesen/search-api/internal/api"
+	"github.com/xavesen/search-api/internal/config"
 	"github.com/xavesen/search-api/internal/queue"
 	"github.com/xavesen/search-api/internal/storage"
-	"github.com/xavesen/search-api/internal/config"
+	"github.com/xavesen/search-api/internal/utils"
 )
 
 func main() {
@@ -33,7 +34,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	server := api.NewServer(config.ListenAddr, kafkaQueue, esClient, mongoStorage)
+	tokenOp := &utils.JwtTokenOperator{}
+
+	server := api.NewServer(config.ListenAddr, kafkaQueue, esClient, mongoStorage, config, tokenOp)
 
 	log.Fatal(server.Start())
 }
