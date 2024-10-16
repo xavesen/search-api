@@ -20,10 +20,14 @@ func (us *UserStorageMock) AddIndexToUser(ctx context.Context, userId string, in
 	return us.AddIndexError
 }
 
-func (us *UserStorageMock) GetUserInfo(ctx context.Context, login string) (*models.User, error) {
+func (us *UserStorageMock) GetUserInfoByLogin(ctx context.Context, login string) (*models.User, error) {
 	return nil, nil
 }
 
 func (us *UserStorageMock) SetRefreshToken(ctx context.Context, userId string, refreshToken string) error {
 	return nil
+}
+
+func (us *UserStorageMock) GetUserInfoById(ctx context.Context, userId string) (*models.User, error) {
+	return nil, nil
 }

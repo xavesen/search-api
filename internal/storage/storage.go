@@ -14,6 +14,7 @@ type DocumentStorage interface {
 type UserStorage interface {
 	CheckUserIndexRights(ctx context.Context, userId string, indexId string) (bool, error)
 	AddIndexToUser(ctx context.Context, userId string, indexName string) error
-	GetUserInfo(ctx context.Context, login string) (*models.User, error)
+	GetUserInfoByLogin (ctx context.Context, login string) (*models.User, error)
 	SetRefreshToken(ctx context.Context, userId string, refreshToken string) error
+	GetUserInfoById(ctx context.Context, userId string) (*models.User, error)
 }

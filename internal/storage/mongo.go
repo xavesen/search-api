@@ -109,7 +109,7 @@ func (s *MongoStorage) AddIndexToUser(ctx context.Context, userId string, indexN
 	return nil
 }
 
-func (s *MongoStorage) GetUserInfo(ctx context.Context, login string) (*models.User, error) {
+func (s *MongoStorage) GetUserInfoByLogin(ctx context.Context, login string) (*models.User, error) {
 	var user *models.User
 	filter := bson.D{
 		{Key: "login", Value: login},
@@ -120,6 +120,31 @@ func (s *MongoStorage) GetUserInfo(ctx context.Context, login string) (*models.U
 			log.Warningf("Tried to find in db non-existent user with login %s ", login)
 		} else {
 			log.Errorf("Error searching for user with login %s in db: %s", login, err.Error())
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *MongoStorage) GetUserInfoById(ctx context.Context, userId string) (*models.User, error) {
+	var user *models.User
+
+	oid, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		log.Errorf("Error converting userId string %s to object id while searching for user with such id: %s", userId, err.Error())
+		return nil, err
+	}
+
+	filter := bson.D{
+		{Key: "_id", Value: oid},
+	}
+
+	if err := s.usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Warningf("Tried to find in db non-existent user with id %s ", userId)
+		} else {
+			log.Errorf("Error searching for user with id %s in db: %s", userId, err.Error())
 		}
 		return nil, err
 	}

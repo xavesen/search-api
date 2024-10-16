@@ -44,6 +44,7 @@ func (s *Server) initialiseRoutes() {
 
 	s.router.HandleFunc("/ping", s.Ping).Methods("GET")
 	s.router.HandleFunc("/login", s.login).Methods("POST")
+	s.router.HandleFunc("/refresh", s.refresh).Methods("POST")
 
 	privateRouter := s.router.PathPrefix("/").Subrouter()
 	amw := middleware.AuthMiddleware{
