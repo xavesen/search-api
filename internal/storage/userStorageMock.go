@@ -31,3 +31,7 @@ func (us *UserStorageMock) SetRefreshToken(ctx context.Context, userId string, r
 func (us *UserStorageMock) GetUserInfoById(ctx context.Context, userId string) (*models.User, error) {
 	return nil, nil
 }
+
+func (us *UserStorageMock) CheckIfTokenBlacklisted(ctx context.Context, token string) (bool, error) {
+	return false, nil
+}

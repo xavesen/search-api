@@ -228,6 +228,7 @@ func TestIndexDocumentsHandler(t *testing.T) {
 	config := &config.Config{
 		JwtKey: []byte("aaa"),
 		TokenHeaderName: "aaa",
+		JwtSalt: "aaa",
 	}
 	for i, test := range indexDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
@@ -428,6 +429,7 @@ func TestSearchDocumentsHandler(t *testing.T) {
 	config := &config.Config{
 		JwtKey: []byte("aaa"),
 		TokenHeaderName: "aaa",
+		JwtSalt: "aaa",
 	}
 	for i, test := range searchDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
@@ -551,6 +553,7 @@ func TestCreateIndexHandler(t *testing.T) {
 	config := &config.Config{
 		JwtKey: []byte("aaa"),
 		TokenHeaderName: "aaa",
+		JwtSalt: "aaa",
 	}
 	for i, test := range createIndexHandlerTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)

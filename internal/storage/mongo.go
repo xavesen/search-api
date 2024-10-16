@@ -15,6 +15,7 @@ type MongoStorage struct {
 	client 				*mongo.Client
 	database 			*mongo.Database
 	usersCollection		*mongo.Collection
+	blacklistCollection	*mongo.Collection
 }
 
 func NewMongoStorage(ctx context.Context, addr string, db string, user string, password string) (*MongoStorage, error) {
@@ -45,11 +46,13 @@ func NewMongoStorage(ctx context.Context, addr string, db string, user string, p
 	log.Debug("Initializing db and collections")
 	appDb := newClient.Database(db)
 	usersCol := appDb.Collection("users")
+	blacklistCol := appDb.Collection("blacklist")
 
 	newStorage := &MongoStorage{
 		client: newClient,
 		database: appDb,
 		usersCollection: usersCol,
+		blacklistCollection: blacklistCol,
 	}
 
 	log.Info("Successfully initialized and connected mongo db")
@@ -175,4 +178,22 @@ func (s *MongoStorage) SetRefreshToken(ctx context.Context, userId string, refre
 	}
 
 	return nil
+}
+
+func (s *MongoStorage) CheckIfTokenBlacklisted(ctx context.Context, token string) (bool, error) {
+	filter := bson.D{
+		{Key: "token", Value: token},
+	}
+
+	count, err := s.blacklistCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Errorf("Error searching for token %s in blacklist in db: %s", token, err)
+		return false, err
+	}
+
+	if count > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }

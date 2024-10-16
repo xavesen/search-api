@@ -48,9 +48,9 @@ func (s *Server) initialiseRoutes() {
 
 	privateRouter := s.router.PathPrefix("/").Subrouter()
 	amw := middleware.AuthMiddleware{
-		JwtKey: s.config.JwtKey,
 		TokenOp: s.tokenOp,
-		TokenHeaderName: s.config.TokenHeaderName,
+		UserStorage: s.userStorage,
+		Config: s.config,
 	}
 	privateRouter.Use(amw.Authenticate)
 

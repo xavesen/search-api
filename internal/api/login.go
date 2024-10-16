@@ -51,7 +51,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedRefreshToken := utils.Hash512WithSalt(refreshToken, s.config.JwtRefreshSalt)
+	hashedRefreshToken := utils.Hash512WithSalt(refreshToken, s.config.JwtSalt)
 
 	err = s.userStorage.SetRefreshToken(context.TODO(), user.Id, hashedRefreshToken)
 	if err != nil {
@@ -88,14 +88,24 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId, _ := token.Claims.GetSubject()
+	hashedRefreshToken := utils.Hash512WithSalt(refreshRequest.RefreshToken, s.config.JwtSalt)
+
+	blacklisted, err := s.userStorage.CheckIfTokenBlacklisted(context.TODO(), hashedRefreshToken)
+	if err != nil {
+		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
+		return
+	}
+
+	if blacklisted {
+		utils.WriteJSON(w, r, http.StatusUnauthorized, false, "Token is blacklisted", nil)
+		return
+	}
 
 	user, err := s.userStorage.GetUserInfoById(context.TODO(), userId)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
 		return
 	}
-
-	hashedRefreshToken := utils.Hash512WithSalt(refreshRequest.RefreshToken, s.config.JwtRefreshSalt)
 
 	if user.RefreshToken != hashedRefreshToken {
 		utils.WriteJSON(w, r, http.StatusUnauthorized, false, "Unauthorized", nil)
@@ -114,7 +124,7 @@ func (s *Server) refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedNewRefreshToken := utils.Hash512WithSalt(refreshToken, s.config.JwtRefreshSalt)
+	hashedNewRefreshToken := utils.Hash512WithSalt(refreshToken, s.config.JwtSalt)
 
 	err = s.userStorage.SetRefreshToken(context.TODO(), userId, hashedNewRefreshToken)
 	if err != nil {

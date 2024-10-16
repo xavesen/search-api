@@ -29,7 +29,7 @@ type Config struct {
 
 	JwtAccessTTL			int			`mapstructure:"JWT_ACCESS_TOKEN_TTL"`
 	JwtRefreshTTL			int			`mapstructure:"JWT_REFRESH_TOKEN_TTL"`
-	JwtRefreshSalt			string		`mapstructure:"JWT_REFRESH_TOKEN_SALT"`
+	JwtSalt        	 		string 		`mapstructure:"JWT_TOKEN_SALT"`
 	JwtKeyStr				string		`mapstructure:"JWT_KEY"`
 	JwtKey					[]byte
 	TokenHeaderName			string		`mapstructure:"TOKEN_HEADER_NAME"`
