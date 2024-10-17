@@ -233,7 +233,7 @@ func TestIndexDocumentsHandler(t *testing.T) {
 	for i, test := range indexDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", test.queue, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{})
+		server := NewServer("", test.queue, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{TokenValid: true})
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -434,7 +434,7 @@ func TestSearchDocumentsHandler(t *testing.T) {
 	for i, test := range searchDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{})
+		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{TokenValid: true})
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -558,7 +558,7 @@ func TestCreateIndexHandler(t *testing.T) {
 	for i, test := range createIndexHandlerTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{})
+		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{TokenValid: true})
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {

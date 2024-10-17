@@ -11,6 +11,8 @@ type TokenOperatorMock struct {
 	Token			string
 	GenerateErr		error
 	ValidateErr		error
+	TokenValid 		bool
+	ReturnedToken	*jwt.Token
 }
 
 func (tom *TokenOperatorMock) GenerateToken(userId string, currentTime time.Time, ttl int, key []byte) (string, error) {
@@ -24,5 +26,5 @@ func (tom *TokenOperatorMock) ValidateToken(tokenStr string, key []byte) (bool, 
 	if tom.ValidateErr != nil {
 		return false, nil, tom.ValidateErr
 	}
-	return true, nil, nil
+	return tom.TokenValid, tom.ReturnedToken, nil
 }
