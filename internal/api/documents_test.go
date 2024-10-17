@@ -25,6 +25,7 @@ var indexDocumentsTests = []struct {
 	queue				*queue.QueueMock
 	userStorage 		*storage.UserStorageMock
 	payload				*models.DocumentsForIndexing
+	tokenOp 			*utils.TokenOperatorMock
 	expectedCode		int
 	expectedResponse 	utils.Response
 }{
@@ -53,6 +54,7 @@ var indexDocumentsTests = []struct {
 				},
 			},
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 200,
 		expectedResponse: utils.Response{
 			Success: true,
@@ -86,6 +88,7 @@ var indexDocumentsTests = []struct {
 				},
 			},
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -118,6 +121,7 @@ var indexDocumentsTests = []struct {
 				},
 			},
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 403,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -150,6 +154,7 @@ var indexDocumentsTests = []struct {
 				},
 			},
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -182,6 +187,7 @@ var indexDocumentsTests = []struct {
 				},
 			},
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 403,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -215,10 +221,44 @@ var indexDocumentsTests = []struct {
 				},
 			},
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
 			ErrorMessage: "Internal server error",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 401 with invalid token",
+		docStorage: &storage.DocStorageMock{
+			EsIndexExists: true,
+		},
+		queue: &queue.QueueMock{
+			Error: nil,
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
+		},
+		payload: &models.DocumentsForIndexing{
+			Index: "test",
+			UserId: "1",
+			Documents: []models.Document{
+				{
+					Title: "test",
+					Text: "test test test",
+				},
+				{
+					Title: "test1",
+					Text: "test1 test1 test1",
+				},
+			},
+		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: false},
+		expectedCode: 401,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Unauthorized",
 			Data: nil,
 		},
 	},
@@ -233,7 +273,7 @@ func TestIndexDocumentsHandler(t *testing.T) {
 	for i, test := range indexDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", test.queue, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{TokenValid: true})
+		server := NewServer("", test.queue, test.docStorage, test.userStorage, config, test.tokenOp)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -264,6 +304,7 @@ var searchDocumentsTests = []struct {
 	docStorage 			*storage.DocStorageMock
 	userStorage 		*storage.UserStorageMock
 	payload				*models.DocumentSearchRequest
+	tokenOp 			*utils.TokenOperatorMock
 	expectedCode		int
 	expectedResponse 	utils.Response
 }{
@@ -289,6 +330,7 @@ var searchDocumentsTests = []struct {
 			Index: "test",
 			Query: "search",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 200,
 		expectedResponse: utils.Response{
 			Success: true,
@@ -318,6 +360,7 @@ var searchDocumentsTests = []struct {
 			Index: "test",
 			Query: "search",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -337,6 +380,7 @@ var searchDocumentsTests = []struct {
 			Index: "test",
 			Query: "search",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 403,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -357,6 +401,7 @@ var searchDocumentsTests = []struct {
 			Index: "test",
 			Query: "search",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -386,6 +431,7 @@ var searchDocumentsTests = []struct {
 			Index: "test",
 			Query: "search",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 403,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -416,10 +462,41 @@ var searchDocumentsTests = []struct {
 			Index: "test",
 			Query: "search",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
 			ErrorMessage: "Internal server error",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 401 with invalid token",
+		docStorage: &storage.DocStorageMock{
+			EsIndexExists: true,
+			Documents: []models.Document{
+				{
+					Title: "test",
+					Text: "test test test",
+				},
+				{
+					Title: "test1",
+					Text: "test1 test1 test1",
+				},
+			},
+		},
+		userStorage: &storage.UserStorageMock{
+			IndexAccess: true,
+		},
+		payload: &models.DocumentSearchRequest{
+			Index: "test",
+			Query: "search",
+		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: false},
+		expectedCode: 401,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Unauthorized",
 			Data: nil,
 		},
 	},
@@ -434,7 +511,7 @@ func TestSearchDocumentsHandler(t *testing.T) {
 	for i, test := range searchDocumentsTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{TokenValid: true})
+		server := NewServer("", nil, test.docStorage, test.userStorage, config, test.tokenOp)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
@@ -466,6 +543,7 @@ var createIndexHandlerTests = []struct {
 	docStorage 			*storage.DocStorageMock
 	userStorage 		*storage.UserStorageMock
 	payload				*models.CreateIndexRequest
+	tokenOp 			*utils.TokenOperatorMock
 	expectedCode		int
 	expectedResponse 	utils.Response
 }{
@@ -476,6 +554,7 @@ var createIndexHandlerTests = []struct {
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 200,
 		expectedResponse: utils.Response{
 			Success: true,
@@ -492,6 +571,7 @@ var createIndexHandlerTests = []struct {
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -508,6 +588,7 @@ var createIndexHandlerTests = []struct {
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -524,6 +605,7 @@ var createIndexHandlerTests = []struct {
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 409,
 		expectedResponse: utils.Response{
 			Success: false,
@@ -540,10 +622,26 @@ var createIndexHandlerTests = []struct {
 		payload: &models.CreateIndexRequest{
 			Index: "test",
 		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: true},
 		expectedCode: 500,
 		expectedResponse: utils.Response{
 			Success: false,
 			ErrorMessage: "Internal server error",
+			Data: nil,
+		},
+	},
+	{
+		testName: "Return 401 with invalid token",
+		docStorage: &storage.DocStorageMock{},
+		userStorage: &storage.UserStorageMock{},
+		payload: &models.CreateIndexRequest{
+			Index: "test",
+		},
+		tokenOp: &utils.TokenOperatorMock{TokenValid: false},
+		expectedCode: 401,
+		expectedResponse: utils.Response{
+			Success: false,
+			ErrorMessage: "Unauthorized",
 			Data: nil,
 		},
 	},
@@ -558,7 +656,7 @@ func TestCreateIndexHandler(t *testing.T) {
 	for i, test := range createIndexHandlerTests {
 		fmt.Printf("Running test #%d: %s\n", i+1, test.testName)
 
-		server := NewServer("", nil, test.docStorage, test.userStorage, config, &utils.TokenOperatorMock{TokenValid: true})
+		server := NewServer("", nil, test.docStorage, test.userStorage, config, test.tokenOp)
 
 		marshaledPayload, err := json.Marshal(test.payload)
 		if err != nil {
