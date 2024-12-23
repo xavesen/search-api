@@ -21,7 +21,7 @@ func (amw *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenStr := r.Header.Get(amw.Config.TokenHeaderName)
 
-		valid, _, err := amw.TokenOp.ValidateToken(tokenStr, amw.Config.JwtKey)
+		valid, token, err := amw.TokenOp.ValidateToken(tokenStr, amw.Config.JwtKey)
 		if err != nil {
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				utils.WriteJSON(w, r, http.StatusUnauthorized, false, "Token has expired, refresh it or login again", nil)
@@ -49,6 +49,12 @@ func (amw *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		userId, err := token.Claims.GetSubject()
+		if err != nil {
+			utils.WriteJSON(w, r, http.StatusUnauthorized, false, "Unauthorized", nil)
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), utils.ContextKeyUserId, userId)))
 	})
 }

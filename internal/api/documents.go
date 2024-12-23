@@ -23,7 +23,7 @@ func (s *Server) indexDocuments(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: add payload validation
 
-	documentsIndexingRequest.UserId = "66d8420df6e5311a791e0a08" // TODO: hardcoded, change to real userId retrieved from token
+	documentsIndexingRequest.UserId = r.Context().Value(utils.ContextKeyUserId).(string)
 	userHasAccess, err := s.userStorage.CheckUserIndexRights(context.TODO(), documentsIndexingRequest.UserId, documentsIndexingRequest.Index)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
@@ -68,7 +68,7 @@ func (s *Server) searchDocuments(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate payload
 
-	userId := "66d8420df6e5311a791e0a08" // TODO: hardcoded, change to real userId retrieved from token
+	userId := r.Context().Value(utils.ContextKeyUserId).(string)
 	userHasAccess, err := s.userStorage.CheckUserIndexRights(context.TODO(), userId, searchRequest.Index)
 	if err != nil {
 		utils.WriteJSON(w, r, http.StatusInternalServerError, false, "Internal server error", nil)
@@ -104,7 +104,7 @@ func (s *Server) createIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := "6707e924ce91f1780b739e8c" // TODO: hardcoded, change to real userId retrieved from token
+	userId := r.Context().Value(utils.ContextKeyUserId).(string)
 
 	// TODO: validate payload
 

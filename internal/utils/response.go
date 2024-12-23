@@ -10,6 +10,7 @@ import (
 type ContextKey string
 
 const ContextKeyReqId ContextKey = "requestId"
+const ContextKeyUserId ContextKey = "userId"
 
 type Response struct {
 	Success			bool	`json:"success"`
